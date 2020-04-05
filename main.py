@@ -1,9 +1,7 @@
 #!/usr/bin/python3
 
 import sys
-import datetime
-import json
-import mysql.connector
+import database
 
 import RPi.GPIO as GPIO
 from threading import Timer
@@ -43,28 +41,9 @@ def measure():
 
     return tem, hum
 
-mydb = mysql.connector.connect(
-  host="localhost",
-  user="measurer",
-  passwd="thefifthfloor",
-  database="measurements"
-)
-
-mycursor = mydb.cursor()
-
-mycursor.execute("CREATE TABLE IF NOT EXISTS measurements (id INT AUTO_INCREMENT PRIMARY KEY, timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, temperature DECIMAL(16,14), humidity DECIMAL(16,14))") 
-
 measurement = measure()
 
-sql = "INSERT INTO measurements (temperature, humidity) VALUES (%s, %s)"
-val = (measurement[0], measurement[1])
-mycursor.execute(sql, val)
+DB = database.Database()
+DB.AddMeasurement(measurement[0], measurement[1])
+DB.PrintAll()
 
-mydb.commit()
-
-mycursor.execute("SELECT * FROM measurements")
-
-myresult = mycursor.fetchall()
-
-for x in myresult:
-  print(x)
